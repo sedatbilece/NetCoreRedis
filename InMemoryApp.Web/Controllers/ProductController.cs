@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using InMemoryApp.Web.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System;
 
@@ -14,8 +15,29 @@ namespace InMemoryApp.Web.Controllers
         public IActionResult Index()
         {
 
-            _memoryCache.Remove("date");
-            
+            if (_memoryCache.Get<Product>("prd")==null)
+            {
+                // get from db
+                var p = new Product() { Id = 1,Name = "Product 1", Price = 100 };
+
+
+                MemoryCacheEntryOptions options = new MemoryCacheEntryOptions()
+                {
+                    AbsoluteExpiration = DateTime.Now.AddSeconds(60),
+                    SlidingExpiration = TimeSpan.FromSeconds(10),
+                    Priority = CacheItemPriority.High,
+                };
+
+                _memoryCache.Set<Product>("prd", p, options);
+
+                ViewBag.prd = p;
+            }
+            else
+            {
+                ViewBag.prd = _memoryCache.Get<Product>("prd");
+            }
+
+
             return View();
         }
 
