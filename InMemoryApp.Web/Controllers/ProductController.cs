@@ -12,13 +12,13 @@ namespace InMemoryApp.Web.Controllers
         {
             _memoryCache = memoryCache;
         }
-        public IActionResult Index()
+        public IActionResult Index(int id)
         {
 
-            if (_memoryCache.Get<Product>("prd")==null)
+            if (_memoryCache.Get<Product>("prd:"+id)==null)
             {
                 // get from db
-                var p = new Product() { Id = 1,Name = "Product 1", Price = 100 };
+                var p = new Product() { Id = id,Name = "Product 1", Price = 100 };
 
 
                 MemoryCacheEntryOptions options = new MemoryCacheEntryOptions()
@@ -28,13 +28,13 @@ namespace InMemoryApp.Web.Controllers
                     Priority = CacheItemPriority.High,
                 };
 
-                _memoryCache.Set<Product>("prd", p, options);
+                _memoryCache.Set<Product>("prd:" + id, p, options);
 
                 ViewBag.prd = p;
             }
             else
             {
-                ViewBag.prd = _memoryCache.Get<Product>("prd");
+                ViewBag.prd = _memoryCache.Get<Product>("prd:" + id);
             }
 
 
