@@ -25,7 +25,16 @@ namespace InMemoryApp.Web.Controllers
             {
                 // get from db
                 var value = DateTime.Now.ToString();
-                _memoryCache.Set<string>("date",value , DateTimeOffset.Now.AddSeconds(20));
+
+                MemoryCacheEntryOptions options = new MemoryCacheEntryOptions()
+                {
+                    AbsoluteExpiration = DateTime.Now.AddSeconds(60),
+                    SlidingExpiration = TimeSpan.FromSeconds(10),
+                    Priority = CacheItemPriority.High,
+                };
+
+                _memoryCache.Set<string>("date",value , options);
+
                 ViewBag.Date = value;
             }
             else
