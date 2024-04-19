@@ -24,39 +24,40 @@ namespace RedisContainer.API.Repositories
         public async Task<Product> CreateAsync(Product product)
         {
            var newPrd =await _productRepository.CreateAsync(product);
-            if (await _database.KeyExistsAsync(productKey)) { 
 
-                var json = JsonSerializer.Serialize(newPrd);
-                _database.HashSet(productKey, newPrd.Id, json);
-            }
+            var json = JsonSerializer.Serialize(newPrd);
+            _database.HashSet(productKey, newPrd.Id, json);
 
-
-                return newPrd;
+            return newPrd;
         }
 
         public async  Task<List<Product>> GetAsync()
         {
-            if(! await _database.KeyExistsAsync(productKey))
-            {
-               return await LoadCacheFromDb(productKey);
-            }
 
-            var products =await GetDataFromCache(productKey);
-            
-            return products;
+               return await LoadCacheFromDb(productKey);
 
         }
 
         public async  Task<Product> GetByIdAsync(int id)
         {
-            if (await _database.KeyExistsAsync(productKey))
+
+         
+            var prd = await _database.HashGetAsync(productKey, id);
+            if (prd.HasValue)
             {
-                var prd = await _database.HashGetAsync(productKey, id);
-                return prd.HasValue ? JsonSerializer.Deserialize<Product>(prd) : null;
+                   return JsonSerializer.Deserialize<Product>(prd);
+            }
+            else
+            {
+                   var product = await _productRepository.GetByIdAsync(id);
+                if (product != null)
+                {
+                          var json = JsonSerializer.Serialize(product);
+                          _database.HashSet(productKey, product.Id, json);
+                }
+                return product;
             }
 
-            var products = await LoadCacheFromDb(productKey);
-            return products.FirstOrDefault(x => x.Id == id);
         }
 
         private async Task<List<Product>> LoadCacheFromDb(string ListKey)
